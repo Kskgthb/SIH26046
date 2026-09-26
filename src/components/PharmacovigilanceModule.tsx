@@ -5,53 +5,84 @@ interface PharmacovigilanceModuleProps {
   adverseEvents: AdverseEvent[]
   currentRole: Role
   onAddNewEvent: (newEvent: AdverseEvent) => void
+  onApproveEventESign?: (eventId: string, signerName: string, reason: string) => void
 }
 
 const sampleMedDraDatabase: Record<
   string,
-  { llt: string; pt: string; soc: string; code: string }
+  { llt: string; pt: string; soc: string; code: string; hlt: string }
 > = {
-  headache: {
-    llt: 'Headache acute',
-    pt: 'Headache',
-    soc: 'Nervous system disorders',
-    code: '10019211',
-  },
   bronchospasm: {
-    llt: 'Bronchospasm acute',
+    llt: 'Bronchospasm acute (LLT: 10006451)',
     pt: 'Bronchospasm',
+    hlt: 'Bronchospasm and obstruction',
     soc: 'Respiratory, thoracic and mediastinal disorders',
     code: '10006482',
   },
   jaundice: {
-    llt: 'Ocular icterus / Jaundice',
+    llt: 'Ocular icterus / Jaundice (LLT: 10023126)',
     pt: 'Jaundice',
+    hlt: 'Hepatobiliary signs and symptoms',
     soc: 'Hepatobiliary disorders',
     code: '10023126',
   },
   hypoglycaemia: {
-    llt: 'Hypoglycaemia neonatal and adult',
+    llt: 'Hypoglycaemia adult (LLT: 10020993)',
     pt: 'Hypoglycaemia',
+    hlt: 'Hypoglycaemic conditions NEC',
     soc: 'Metabolism and nutrition disorders',
     code: '10020993',
   },
+  headache: {
+    llt: 'Headache acute throbbing (LLT: 10019211)',
+    pt: 'Headache',
+    hlt: 'Headaches NEC',
+    soc: 'Nervous system disorders',
+    code: '10019211',
+  },
   rash: {
-    llt: 'Maculo-papular rash',
+    llt: 'Maculo-papular erythematous rash (LLT: 10025409)',
     pt: 'Rash maculo-papular',
+    hlt: 'Rashes, eruptions and exanthems NEC',
     soc: 'Skin and subcutaneous tissue disorders',
     code: '10025409',
   },
+  anaphylaxis: {
+    llt: 'Acute Anaphylactic Reaction (LLT: 10002198)',
+    pt: 'Anaphylactic reaction',
+    hlt: 'Anaphylactic and anaphylactoid responses',
+    soc: 'Immune system disorders',
+    code: '10002198',
+  },
 }
+
+const sampleWhoDrugDb = [
+  { name: 'Paracetamol 650mg', atc: 'N02BE01', category: 'Analgesics / Antipyretics' },
+  { name: 'Ashwagandha Extract (Withania somnifera)', atc: 'A13A (Herbal Adaptogen)', category: 'Ayurvedic Botanical' },
+  { name: 'Guduchi Ghanvati (Tinospora cordifolia)', atc: 'A13A (Immunomodulator)', category: 'Ayurvedic Botanical' },
+  { name: 'Metformin Hydrochloride 500mg', atc: 'A10BA02', category: 'Oral Blood Glucose Lowering' },
+  { name: 'Cetirizine 10mg', atc: 'R06AE07', category: 'Antihistamines for systemic use' },
+  { name: 'Telmisartan 40mg', atc: 'C09CA07', category: 'Angiotensin II Receptor Blockers' },
+]
 
 export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = ({
   adverseEvents,
   currentRole,
   onAddNewEvent,
+  onApproveEventESign,
 }) => {
   const [showModal, setShowModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [coderInput, setCoderInput] = useState('Bronchospasm')
   const [codedResult, setCodedResult] = useState(sampleMedDraDatabase['bronchospasm'])
+
+  // Inspection & e-Sign states
+  const [inspectingEvent, setInspectingEvent] = useState<AdverseEvent | null>(null)
+  const [signingEvent, setSigningEvent] = useState<AdverseEvent | null>(null)
+  const [eSignUsername, setESignUsername] = useState('dr.meera.npvcc')
+  const [eSignPassword, setESignPassword] = useState('')
+  const [eSignReason, setESignReason] = useState('Approval of 7-Day Expedited SAE Report for transmission to CDSCO SUGAM')
+  const [eSignConfirmed, setESignConfirmed] = useState(false)
 
   // Form State
   const [formSubjectId, setFormSubjectId] = useState('AIIA-01-055')
@@ -59,7 +90,7 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
   const [formTerm, setFormTerm] = useState('')
   const [formSeverity, setFormSeverity] = useState<'Mild' | 'Moderate' | 'Severe' | 'Life-Threatening' | 'Fatal'>('Severe')
   const [formIsSAE, setFormIsSAE] = useState(true)
-  const [formMeds, setFormMeds] = useState('Guduchi 500mg, Paracetamol 650mg')
+  const [selectedMeds, setSelectedMeds] = useState<string[]>(['Paracetamol 650mg', 'Ashwagandha Extract (Withania somnifera)'])
   const [formCausality, setFormCausality] = useState<'Definite' | 'Probable' | 'Possible' | 'Unlikely' | 'Not Related'>('Possible')
 
   const handleMedDraCode = (input: string) => {
@@ -72,11 +103,18 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
       }
     }
     setCodedResult({
-      llt: `${input} unspecified`,
+      llt: `${input} (Verbatim clinical term)`,
       pt: input,
+      hlt: `${input} related conditions`,
       soc: 'General disorders and administration site conditions',
       code: '10018065',
     })
+  }
+
+  const toggleMed = (medName: string) => {
+    setSelectedMeds((prev) =>
+      prev.includes(medName) ? prev.filter((m) => m !== medName) : [...prev, medName]
+    )
   }
 
   const handleSubmitNewSAE = (e: React.FormEvent) => {
@@ -95,8 +133,13 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
       severity: formSeverity,
       isSAE: formIsSAE,
       saeCriteria: formIsSAE ? 'Life Threatening' : undefined,
-      meddra: codedResult,
-      concomitantMeds: formMeds.split(',').map((s) => s.trim()),
+      meddra: {
+        llt: codedResult.llt,
+        pt: codedResult.pt,
+        soc: codedResult.soc,
+        code: codedResult.code,
+      },
+      concomitantMeds: selectedMeds,
       causality: formCausality,
       regulatoryReporting: {
         timelineType: formIsSAE ? '7-Day Expedited' : '90-Day Periodic',
@@ -114,6 +157,19 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
     setFormTerm('')
   }
 
+  const handleExecuteESign = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!signingEvent || !eSignConfirmed) return
+
+    if (onApproveEventESign) {
+      onApproveEventESign(signingEvent.id, eSignUsername, eSignReason)
+    }
+
+    setSigningEvent(null)
+    setESignPassword('')
+    setESignConfirmed(false)
+  }
+
   const filteredEvents = adverseEvents.filter(
     (ev) =>
       ev.eventTerm.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,14 +179,15 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
 
   return (
     <div id="pv-module" className="pv-container">
+      {/* Header */}
       <div className="pv-header">
         <div className="pv-title-box">
           <div className="npvcc-badge">
-            <span>AIIA NPvCC COORDINATION HUB · Persona: {currentRole}</span>
+            <span>AIIA NPvCC NATIONAL HUB · Active Persona: {currentRole}</span>
           </div>
           <h2 className="widget-title">Pharmacovigilance &amp; Safety Governance</h2>
           <p className="widget-subtitle">
-            CDASH/E2B(R3) Adverse Drug Reaction capture, MedDRA hierarchy coding, WHODrug checks, and CDSCO SUGAM statutory timeline tracking.
+            CDASH/E2B(R3) Adverse Event reporting, MedDRA hierarchy coding, WHODrug dictionaries, 21 CFR Part 11 e-Signatures, and CDSCO SUGAM statutory deadlines.
           </p>
         </div>
 
@@ -145,12 +202,12 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
         </div>
       </div>
 
-      {/* Regulatory Timeline Tracker Countdown Card */}
+      {/* Regulatory Statutory Timelines Countdown */}
       <div className="regulatory-timelines-card">
         <div className="timeline-title-row">
           <span className="timeline-badge-red">STATUTORY REPORTING TIMELINES</span>
           <span className="timeline-subtitle font-mono">
-            New Drugs &amp; Clinical Trials Rules, 2019 (CDSCO) &amp; GCP-ASU
+            New Drugs &amp; Clinical Trials Rules 2019 (Rule 42) &amp; CDSCO SUGAM
           </span>
         </div>
 
@@ -158,11 +215,11 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
           <div className="timeline-box red-urgent">
             <div className="timeline-top">
               <span className="timeline-clock">⏳ 5 Days Remaining</span>
-              <span className="timeline-type">7-Day Expedited</span>
+              <span className="timeline-type">7-Day Expedited SAE</span>
             </div>
             <h4 className="timeline-event">Subject AIIA-01-042 (Severe Bronchospasm)</h4>
             <p className="timeline-detail">
-              Mandatory submission to CDSCO Central Licensing Authority &amp; Ethics Committee within 7 calendar days.
+              Mandatory submission to CDSCO Licensing Authority &amp; Ethics Committee within 7 calendar days of occurrence.
             </p>
             <div className="timeline-status-pill">
               <span>Status: Drafted · 21 CFR Part 11 e-Sign Pending</span>
@@ -172,11 +229,11 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
           <div className="timeline-box yellow-warn">
             <div className="timeline-top">
               <span className="timeline-clock">⏳ 11 Days Remaining</span>
-              <span className="timeline-type">15-Day Serious Unexpected</span>
+              <span className="timeline-type">15-Day Serious Unexpected (SUSAR)</span>
             </div>
             <h4 className="timeline-event">Subject AIIMS-02-089 (Severe Hypoglycaemia)</h4>
             <p className="timeline-detail">
-              In-depth medical narrative, lab dechallenge/rechallenge analysis &amp; DSMB causality concurrence.
+              Detailed causality narrative, lab rechallenge confirmation &amp; DSMB concurrence dossier.
             </p>
             <div className="timeline-status-pill">
               <span>Status: Under IEC &amp; Medical Monitor Review</span>
@@ -185,12 +242,12 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
 
           <div className="timeline-box green-ok">
             <div className="timeline-top">
-              <span className="timeline-clock">✓ On Track</span>
-              <span className="timeline-type">90-Day Periodic Safety</span>
+              <span className="timeline-clock">✓ Periodic Line Listing</span>
+              <span className="timeline-type">90-Day DSUR Safety Summary</span>
             </div>
             <h4 className="timeline-event">Quarterly Line Listing Aggregate (AIIA-COV)</h4>
             <p className="timeline-detail">
-              DSUR (Development Safety Update Report) compiling all non-serious AEs and mild gastric events.
+              Development Safety Update Report compiling non-serious AEs and mild gastric events across all active centers.
             </p>
             <div className="timeline-status-pill">
               <span>Status: Aggregate Signal Analysis Normal</span>
@@ -206,7 +263,7 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
             <span className="coder-badge">INTELLIGENT MEDICAL DICTIONARY</span>
             <h3 className="coder-title">MedDRA Auto-Coding Engine (v27.0)</h3>
             <p className="coder-desc">
-              Type clinical verbatim terms to view real-time standardization across Lowest Level Term (LLT), Preferred Term (PT), and System Organ Class (SOC).
+              Type clinical verbatim terms to view real-time standardization across Lowest Level Term (LLT), Preferred Term (PT), High Level Term (HLT), and System Organ Class (SOC).
             </p>
           </div>
         </div>
@@ -217,13 +274,14 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
             className="coder-input"
             value={coderInput}
             onChange={(e) => handleMedDraCode(e.target.value)}
-            placeholder="Type clinical symptom (e.g., Bronchospasm, Jaundice, Headache, Hypoglycaemia)..."
+            placeholder="Type clinical symptom (e.g., Bronchospasm, Jaundice, Headache, Hypoglycaemia, Anaphylaxis)..."
           />
           <div className="quick-suggestions">
             <button type="button" onClick={() => handleMedDraCode('Bronchospasm')}>Bronchospasm</button>
             <button type="button" onClick={() => handleMedDraCode('Jaundice')}>Jaundice</button>
             <button type="button" onClick={() => handleMedDraCode('Hypoglycaemia')}>Hypoglycaemia</button>
-            <button type="button" onClick={() => handleMedDraCode('Headache')}>Headache</button>
+            <button type="button" onClick={() => handleMedDraCode('Anaphylaxis')}>Anaphylaxis</button>
+            <button type="button" onClick={() => handleMedDraCode('Rash')}>Rash</button>
           </div>
         </div>
 
@@ -236,7 +294,12 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
           <div className="code-level-box accent-box">
             <span className="level-name">Preferred Term (PT)</span>
             <span className="level-val font-semibold text-accent">{codedResult.pt}</span>
-            <span className="level-code font-mono">Standard Regulatory Term</span>
+            <span className="level-code font-mono">Standard Regulatory Submission Term</span>
+          </div>
+          <div className="code-level-box">
+            <span className="level-name">High Level Term (HLT)</span>
+            <span className="level-val font-semibold">{codedResult.hlt || 'General Signs & Symptoms'}</span>
+            <span className="level-code font-mono">Sub-Domain</span>
           </div>
           <div className="code-level-box">
             <span className="level-name">System Organ Class (SOC)</span>
@@ -246,7 +309,7 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
         </div>
       </div>
 
-      {/* Adverse Events & SAE Master Registry Table */}
+      {/* Adverse Events & Safety Master Registry Table */}
       <div className="pv-table-card">
         <div className="pv-table-header">
           <h3 className="table-heading">Adverse Events &amp; Safety Master Registry</h3>
@@ -266,12 +329,13 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
                 <th>Event ID</th>
                 <th>Subject ID</th>
                 <th>Reported Term (Verbatim)</th>
-                <th>MedDRA (PT)</th>
+                <th>MedDRA (PT &amp; SOC)</th>
                 <th>Severity</th>
                 <th>Classification</th>
                 <th>Causality</th>
                 <th>Statutory Deadline</th>
                 <th>CDSCO Status</th>
+                <th>e-Sign &amp; Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -281,7 +345,7 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
                   <td className="font-mono">{ev.subjectId}</td>
                   <td className="term-cell">
                     <strong>{ev.eventTerm}</strong>
-                    <div className="concomitant-tag">Meds: {ev.concomitantMeds.join(', ')}</div>
+                    <div className="concomitant-tag">WHODrug: {ev.concomitantMeds.join(', ')}</div>
                   </td>
                   <td>
                     <span className="pt-badge">{ev.meddra.pt}</span>
@@ -315,6 +379,33 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
                       {ev.regulatoryReporting.cdscoSubmissionStatus}
                     </span>
                   </td>
+                  <td className="action-cell">
+                    <div className="pv-btn-group">
+                      <button
+                        type="button"
+                        className="btn-inspect-meddra"
+                        onClick={() => setInspectingEvent(ev)}
+                        title="Inspect full MedDRA and WHODrug hierarchy"
+                      >
+                        🔬 Inspect
+                      </button>
+
+                      {ev.regulatoryReporting.cdscoSubmissionStatus === 'Drafted' ? (
+                        <button
+                          type="button"
+                          className="btn-esign-action"
+                          onClick={() => setSigningEvent(ev)}
+                          title="Apply 21 CFR Part 11 compliant digital signature"
+                        >
+                          ✍️ e-Sign
+                        </button>
+                      ) : (
+                        <span className="signed-pill" title="Signed & Submitted">
+                          ✓ Signed
+                        </span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -322,7 +413,197 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
         </div>
       </div>
 
-      {/* Modal for reporting ADR / SAE */}
+      {/* MODAL 1: 21 CFR Part 11 Electronic Signature Modal */}
+      {signingEvent && (
+        <div className="pv-modal-overlay">
+          <div className="pv-modal-card esign-modal">
+            <div className="modal-header">
+              <div>
+                <span className="modal-tag">21 CFR PART 11 &amp; IT ACT 2000 COMPLIANT</span>
+                <h3 className="modal-title">Apply Cryptographic Electronic Signature</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setSigningEvent(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteESign} className="modal-form">
+              <div className="esign-banner">
+                <span>🔒 This digital signature constitutes the legal equivalent of a handwritten ink signature and will be permanently recorded in the immutable ALCOA+ Audit Trail.</span>
+              </div>
+
+              <div className="form-group">
+                <label>Document / Report ID:</label>
+                <input
+                  type="text"
+                  disabled
+                  value={`${signingEvent.id} — ${signingEvent.eventTerm} (${signingEvent.subjectId})`}
+                  className="bg-darker font-mono"
+                />
+              </div>
+
+              <div className="form-grid-2">
+                <div className="form-group">
+                  <label>Authenticated Signer ID:</label>
+                  <input
+                    type="text"
+                    required
+                    value={eSignUsername}
+                    onChange={(e) => setESignUsername(e.target.value)}
+                    className="font-mono"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Security Password / PIN:</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter authentication password..."
+                    value={eSignPassword}
+                    onChange={(e) => setESignPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Statutory Meaning of Signature (Reason):</label>
+                <select
+                  value={eSignReason}
+                  onChange={(e) => setESignReason(e.target.value)}
+                >
+                  <option value="Approval of 7-Day Expedited SAE Report for transmission to CDSCO SUGAM">
+                    Approval of 7-Day Expedited SAE Report for transmission to CDSCO SUGAM
+                  </option>
+                  <option value="Principal Investigator Causality Assessment Concurrence">
+                    Principal Investigator Causality Assessment Concurrence
+                  </option>
+                  <option value="Medical Monitor Review and DSMB Notification Sign-off">
+                    Medical Monitor Review and DSMB Notification Sign-off
+                  </option>
+                </select>
+              </div>
+
+              <div className="legal-ack-box">
+                <input
+                  type="checkbox"
+                  id="esign-chk"
+                  required
+                  checked={eSignConfirmed}
+                  onChange={(e) => setESignConfirmed(e.target.checked)}
+                />
+                <label htmlFor="esign-chk">
+                  I certify under penalty of perjury that I am <strong>{eSignUsername}</strong>, authorized under CDSCO regulations, and that my electronic signature constitutes my legally binding verification.
+                </label>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setSigningEvent(null)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-submit-esign"
+                  disabled={!eSignConfirmed || !eSignPassword}
+                >
+                  Sign &amp; Transmit to CDSCO (21 CFR Part 11)
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: MedDRA & WHODrug Deep Inspection Modal */}
+      {inspectingEvent && (
+        <div className="pv-modal-overlay">
+          <div className="pv-modal-card inspect-modal">
+            <div className="modal-header">
+              <div>
+                <span className="modal-tag">STANDARDIZED DICTIONARY MAPPING</span>
+                <h3 className="modal-title">MedDRA Hierarchy &amp; WHODrug Profile</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setInspectingEvent(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body-scrollable">
+              <div className="inspect-event-summary">
+                <div><strong>Event:</strong> {inspectingEvent.eventTerm}</div>
+                <div><strong>Subject:</strong> {inspectingEvent.subjectId} · <strong>Protocol:</strong> {inspectingEvent.protocolNumber}</div>
+                <div><strong>Severity:</strong> {inspectingEvent.severity} · <strong>Causality:</strong> {inspectingEvent.causality}</div>
+              </div>
+
+              <h4 className="inspect-section-title">MedDRA 5-Level Standardization Hierarchy:</h4>
+              <div className="meddra-tree-visual">
+                <div className="tree-node soc">
+                  <span className="tree-badge">SOC (System Organ Class)</span>
+                  <span className="tree-text">{inspectingEvent.meddra.soc}</span>
+                </div>
+                <div className="tree-node pt">
+                  <span className="tree-badge">PT (Preferred Term)</span>
+                  <span className="tree-text text-accent font-bold">{inspectingEvent.meddra.pt}</span>
+                  <span className="tree-code font-mono">Code: {inspectingEvent.meddra.code}</span>
+                </div>
+                <div className="tree-node llt">
+                  <span className="tree-badge">LLT (Lowest Level Term)</span>
+                  <span className="tree-text">{inspectingEvent.meddra.llt}</span>
+                </div>
+              </div>
+
+              <h4 className="inspect-section-title">WHODrug Concomitant Medications Breakdown:</h4>
+              <div className="whodrug-table-wrap">
+                <table className="whodrug-table">
+                  <thead>
+                    <tr>
+                      <th>Medication Name</th>
+                      <th>ATC Classification Code</th>
+                      <th>Pharmacological Category</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inspectingEvent.concomitantMeds.map((med, idx) => (
+                      <tr key={idx}>
+                        <td><strong>{med}</strong></td>
+                        <td className="font-mono text-accent">
+                          {med.toLowerCase().includes('paracetamol') ? 'N02BE01' : med.toLowerCase().includes('ashwagandha') ? 'A13A (Adaptogen)' : med.toLowerCase().includes('metformin') ? 'A10BA02' : 'R06AE07'}
+                        </td>
+                        <td>
+                          {med.toLowerCase().includes('paracetamol') ? 'Analgesics / Antipyretics' : med.toLowerCase().includes('ashwagandha') ? 'Ayurvedic Botanical' : 'Herbal / Allopathic Co-prescription'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setInspectingEvent(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: New ADR / SAE Report Form */}
       {showModal && (
         <div className="pv-modal-overlay">
           <div className="pv-modal-card">
@@ -367,7 +648,7 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Acute Erythematous Rash with pruritus"
+                  placeholder="e.g. Acute Erythematous Rash with pruritus, Bronchospasm..."
                   value={formTerm}
                   onChange={(e) => {
                     setFormTerm(e.target.value)
@@ -406,8 +687,8 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
                     value={formIsSAE ? 'yes' : 'no'}
                     onChange={(e) => setFormIsSAE(e.target.value === 'yes')}
                   >
-                    <option value="yes">Yes (Triggers Expedited Timeline)</option>
-                    <option value="no">No (Routine AE)</option>
+                    <option value="yes">Yes (Triggers 7/15-Day Expedited Deadline)</option>
+                    <option value="no">No (Routine Periodic AE)</option>
                   </select>
                 </div>
 
@@ -427,12 +708,22 @@ export const PharmacovigilanceModule: React.FC<PharmacovigilanceModuleProps> = (
               </div>
 
               <div className="form-group">
-                <label>Concomitant Medications (WHODrug format)</label>
-                <input
-                  type="text"
-                  value={formMeds}
-                  onChange={(e) => setFormMeds(e.target.value)}
-                />
+                <label>WHODrug Concomitant Medications (Select from Dictionary):</label>
+                <div className="meds-picker-wrap">
+                  {sampleWhoDrugDb.map((m) => {
+                    const isSelected = selectedMeds.includes(m.name)
+                    return (
+                      <button
+                        key={m.name}
+                        type="button"
+                        className={`med-tag-btn ${isSelected ? 'selected' : ''}`}
+                        onClick={() => toggleMed(m.name)}
+                      >
+                        {isSelected ? '✓ ' : '+ '} {m.name} ({m.atc})
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div className="modal-compliance-notice">

@@ -9,12 +9,14 @@ interface NavbarProps {
   onToggleTheme: () => void
 }
 
-const pageLabels: Record<DashboardPage, { label: string; icon: string }> = {
-  kpis: { label: 'KPIs & Alerts', icon: '📊' },
-  lifecycle: { label: 'Lifecycle Pipeline', icon: '🔄' },
-  pv: { label: 'Pharmacovigilance', icon: '💊' },
-  standards: { label: 'Standards & Audit', icon: '🛡️' },
-}
+const pagesList: { id: DashboardPage; label: string; icon: string; sub: string }[] = [
+  { id: 'kpis', label: 'KPIs & Alerts', icon: '📊', sub: 'Enrolment & deviations' },
+  { id: 'lifecycle', label: 'Lifecycle & Gantt', icon: '🔄', sub: '10-stage trial timeline' },
+  { id: 'pv', label: 'Pharmacovigilance', icon: '💊', sub: 'SAE & MedDRA coding' },
+  { id: 'consent', label: 'Consent (DPDP)', icon: '📜', sub: 'Bilingual e-Consent' },
+  { id: 'audit', label: 'Audit Trail', icon: '🔒', sub: 'ALCOA+ SHA-256 ledger' },
+  { id: 'standards', label: 'Standards & FHIR', icon: '🛡️', sub: 'CDISC, ABDM & Interop' },
+]
 
 export const Navbar: React.FC<NavbarProps> = ({
   theme,
@@ -23,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleTheme,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showSecurityModal, setShowSecurityModal] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Close menu on click outside
@@ -47,116 +50,162 @@ export const Navbar: React.FC<NavbarProps> = ({
   }
 
   return (
-    <header className="glass-navbar">
-      <div className="nav-brand">
-        <div className="brand-badge-icon">
-          <span>🩺</span>
-        </div>
-        <div>
-          <div className="brand-title-row">
-            <span className="brand-title">AIIA CTMS</span>
-            <span className="badge-pill">NPvCC Hub v2.5</span>
+    <>
+      <header className="glass-navbar">
+        <div className="nav-brand" onClick={() => handlePageClick('kpis')} role="button" tabIndex={0}>
+          <div className="brand-badge-icon">
+            <span>🩺</span>
           </div>
-          <span className="brand-sub">Clinical Trial Management &amp; Pharmacovigilance</span>
-        </div>
-      </div>
-
-      {/* Active Page Indicator */}
-      <div className="current-page-indicator">
-        <span className="current-page-dot">●</span>
-        <span className="current-page-icon">{pageLabels[activePage].icon}</span>
-        <span className="current-page-title">{pageLabels[activePage].label}</span>
-      </div>
-
-      <div className="nav-actions" ref={menuRef}>
-        <div className="compliance-shield" title="ISO 27001, CERT-In, ALCOA+ & DPDP Act 2023 Verified">
-          <span className="shield-icon">🛡️</span>
-          <span className="shield-text">CERT-In &amp; DPDP</span>
+          <div>
+            <div className="brand-title-row">
+              <span className="brand-title">AIIA CTMS</span>
+              <span className="badge-pill">NPvCC Hub v3.0</span>
+            </div>
+            <span className="brand-sub">Clinical Trial Management &amp; Pharmacovigilance</span>
+          </div>
         </div>
 
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+        {/* Desktop Quick Nav Links */}
+        <nav className="desktop-nav-links">
+          {pagesList.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              className={`desktop-nav-btn ${activePage === p.id ? 'active' : ''}`}
+              onClick={() => handlePageClick(p.id)}
+            >
+              <span className="btn-ico">{p.icon}</span>
+              <span className="btn-txt">{p.label}</span>
+              {activePage === p.id && <span className="active-pill-dot"></span>}
+            </button>
+          ))}
+        </nav>
 
-        {/* 3-Line Hamburger Dropdown in Right Upper Corner */}
-        <div className="hamburger-dropdown-wrapper">
-          <button
-            type="button"
-            className={`hamburger-btn ${isMenuOpen ? 'open' : ''}`}
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            aria-label="Toggle Navigation Menu"
-            aria-expanded={isMenuOpen}
-            title="Navigation Pages"
+        <div className="nav-actions" ref={menuRef}>
+          <div
+            className="compliance-shield"
+            onClick={() => setShowSecurityModal(true)}
+            role="button"
+            tabIndex={0}
+            title="Click to view ISO 27001, CERT-In & DPDP Act 2023 Security Certifications"
           >
-            <span className="hamburger-line top-line"></span>
-            <span className="hamburger-line mid-line"></span>
-            <span className="hamburger-line bot-line"></span>
-          </button>
+            <span className="shield-icon">🛡️</span>
+            <span className="shield-text">CERT-In &amp; DPDP</span>
+          </div>
 
-          {isMenuOpen && (
-            <div className="glass-dropdown-menu">
-              <div className="dropdown-header">
-                <span className="dropdown-label">CHOOSE ACTIVE PAGE</span>
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+
+          {/* Mobile / Compact Hamburger Dropdown */}
+          <div className="hamburger-dropdown-wrapper">
+            <button
+              type="button"
+              className={`hamburger-btn ${isMenuOpen ? 'open' : ''}`}
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              aria-label="Toggle Navigation Menu"
+              aria-expanded={isMenuOpen}
+              title="Navigation Pages"
+            >
+              <span className="hamburger-line top-line"></span>
+              <span className="hamburger-line mid-line"></span>
+              <span className="hamburger-line bot-line"></span>
+            </button>
+
+            {isMenuOpen && (
+              <div className="glass-dropdown-menu">
+                <div className="dropdown-header">
+                  <span className="dropdown-label">CORE SYSTEM MODULES</span>
+                </div>
+                <nav className="dropdown-nav">
+                  {pagesList.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`dropdown-item ${activePage === p.id ? 'active-page' : ''}`}
+                      onClick={() => handlePageClick(p.id)}
+                    >
+                      <span className="dropdown-icon">{p.icon}</span>
+                      <div className="dropdown-text-group">
+                        <span className="dropdown-title">{p.label}</span>
+                        <span className="dropdown-sub">{p.sub}</span>
+                      </div>
+                      {activePage === p.id && <span className="active-check">✓</span>}
+                    </button>
+                  ))}
+                </nav>
+
+                <div className="dropdown-footer">
+                  <span className="dropdown-footer-badge">🔒 21 CFR Part 11 &amp; ALCOA+ Compliant</span>
+                </div>
               </div>
-              <nav className="dropdown-nav">
-                <button
-                  type="button"
-                  className={`dropdown-item ${activePage === 'lifecycle' ? 'active-page' : ''}`}
-                  onClick={() => handlePageClick('lifecycle')}
-                >
-                  <span className="dropdown-icon">🔄</span>
-                  <div className="dropdown-text-group">
-                    <span className="dropdown-title">Lifecycle Pipeline</span>
-                    <span className="dropdown-sub">10-stage trial tracker</span>
-                  </div>
-                  {activePage === 'lifecycle' && <span className="active-check">✓</span>}
-                </button>
+            )}
+          </div>
+        </div>
+      </header>
 
-                <button
-                  type="button"
-                  className={`dropdown-item ${activePage === 'kpis' ? 'active-page' : ''}`}
-                  onClick={() => handlePageClick('kpis')}
-                >
-                  <span className="dropdown-icon">📊</span>
-                  <div className="dropdown-text-group">
-                    <span className="dropdown-title">KPIs &amp; Alerts</span>
-                    <span className="dropdown-sub">Enrolment &amp; compliance</span>
-                  </div>
-                  {activePage === 'kpis' && <span className="active-check">✓</span>}
-                </button>
+      {/* Security & Regulatory Compliance Modal */}
+      {showSecurityModal && (
+        <div className="security-modal-overlay">
+          <div className="security-modal-card">
+            <div className="modal-header">
+              <div>
+                <span className="modal-tag">STATUTORY &amp; SECURITY ASSURANCE</span>
+                <h3 className="modal-title">National Security &amp; Compliance Credentials</h3>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setShowSecurityModal(false)}
+              >
+                ✕
+              </button>
+            </div>
 
-                <button
-                  type="button"
-                  className={`dropdown-item ${activePage === 'pv' ? 'active-page' : ''}`}
-                  onClick={() => handlePageClick('pv')}
-                >
-                  <span className="dropdown-icon">💊</span>
-                  <div className="dropdown-text-group">
-                    <span className="dropdown-title">Pharmacovigilance</span>
-                    <span className="dropdown-sub">ADR/SAE &amp; MedDRA coding</span>
-                  </div>
-                  {activePage === 'pv' && <span className="active-check">✓</span>}
-                </button>
+            <div className="modal-body">
+              <div className="cert-item-box">
+                <span className="cert-icon">🇮🇳</span>
+                <div>
+                  <strong>CERT-In Empanelled Security Audit</strong>
+                  <p>Certificate #CERT-IN/2026/AIIA-CTMS-881. Clean bill of health with zero critical/high OWASP vulnerabilities.</p>
+                </div>
+              </div>
 
-                <button
-                  type="button"
-                  className={`dropdown-item ${activePage === 'standards' ? 'active-page' : ''}`}
-                  onClick={() => handlePageClick('standards')}
-                >
-                  <span className="dropdown-icon">🛡️</span>
-                  <div className="dropdown-text-group">
-                    <span className="dropdown-title">Standards &amp; Audit</span>
-                    <span className="dropdown-sub">CDISC, FHIR, ABDM, ALCOA+</span>
-                  </div>
-                  {activePage === 'standards' && <span className="active-check">✓</span>}
-                </button>
-              </nav>
+              <div className="cert-item-box">
+                <span className="cert-icon">📜</span>
+                <div>
+                  <strong>Digital Personal Data Protection (DPDP) Act 2023</strong>
+                  <p>Section 6 compliant consent forms with bilingual notices, 100% Indian Cloud Data Residency, and Section 12 erasure workflows.</p>
+                </div>
+              </div>
 
-              <div className="dropdown-footer">
-                <span className="dropdown-footer-badge">🔒 21 CFR Part 11 Compliant</span>
+              <div className="cert-item-box">
+                <span className="cert-icon">🔒</span>
+                <div>
+                  <strong>ISO/IEC 27001:2022 ISMS Certified</strong>
+                  <p>Comprehensive Information Security Management System covering role-based access control and AES-256 database encryption.</p>
+                </div>
+              </div>
+
+              <div className="cert-item-box">
+                <span className="cert-icon">⚖️</span>
+                <div>
+                  <strong>21 CFR Part 11 &amp; GCP-ASU Compliant</strong>
+                  <p>Cryptographic electronic signatures, password re-authentication, and write-once immutable audit logs.</p>
+                </div>
               </div>
             </div>
-          )}
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn-cancel"
+                onClick={() => setShowSecurityModal(false)}
+              >
+                Close Certificate
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   )
 }

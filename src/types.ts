@@ -7,7 +7,7 @@ export type Role =
   | 'Admin'
   | 'Regulator';
 
-export type DashboardPage = 'lifecycle' | 'kpis' | 'pv' | 'standards';
+export type DashboardPage = 'kpis' | 'lifecycle' | 'pv' | 'consent' | 'audit' | 'standards';
 
 export type LifecycleStage =
   | 'Protocol'
@@ -135,21 +135,26 @@ export interface AuditLogEntry {
   userId: string;
   userName: string;
   role: Role;
-  action: 'CREATE' | 'UPDATE' | 'ELECTRONIC_SIGNATURE' | 'EXPORT_SDTM' | 'CONSENT_VERIFY' | 'STATUS_CHANGE';
+  action: 'CREATE' | 'UPDATE' | 'ELECTRONIC_SIGNATURE' | 'EXPORT_SDTM' | 'CONSENT_VERIFY' | 'STATUS_CHANGE' | 'CONSENT_WITHDRAWAL' | 'E_SIGN_APPROVAL';
   entity: 'STUDY' | 'SUBJECT' | 'AE_SAE' | 'ETHICS_SUBMISSION' | 'MONITORING_REPORT' | 'CONSENT';
   entityId: string;
   details: string;
+  oldValue?: string;
+  newValue?: string;
   ipAddress: string;
   alcoaHash: string; // SHA-256 cryptographically immutable representation
 }
 
 export interface DPDPRecord {
   subjectId: string;
+  participantName?: string;
   studyProtocol: string;
   abhaId: string;
   consentDate: string;
   consentVersion: string;
-  consentStatus: 'Active' | 'Withdrawn' | 'Re-consent Needed';
+  consentStatus: 'Active' | 'Withdrawn' | 'Re-consent Needed' | 'Pending';
+  audioVisualRecorded?: boolean;
+  digitalSignatureHash?: string;
   encryptionStatus: 'AES-256 (At-Rest & In-Transit)';
   dataResidency: 'MeitY-Empanelled Cloud (New Delhi / Mumbai Region)';
   rightToErasureRequest: boolean;
