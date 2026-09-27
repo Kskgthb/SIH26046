@@ -7,6 +7,7 @@ interface KPIAlertCenterProps {
   currentRole: Role
   onOpenSAEForm: () => void
   onSelectStudy?: (studyId: string) => void
+  onNavigateToPage?: (page: 'workspace' | 'kpis' | 'lifecycle' | 'pv' | 'consent' | 'audit' | 'standards') => void
 }
 
 export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
@@ -14,6 +15,7 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
   alerts,
   currentRole,
   onOpenSAEForm,
+  onNavigateToPage,
 }) => {
   const [selectedStudyTab, setSelectedStudyTab] = useState<string>('study-1')
 
@@ -34,6 +36,191 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
 
   return (
     <div className="kpi-alert-container">
+      {/* 7-PILLAR ARCHITECTURE & COMPLIANCE COMMAND MATRIX */}
+      <div className="platform-compliance-hub-card">
+        <div className="hub-top-row">
+          <div className="hub-title-group">
+            <span className="hub-eyebrow">STANDARDS-FIRST CTMS &amp; PHARMACOVIGILANCE PLATFORM</span>
+            <h3 className="hub-headline">National Clinical Trial &amp; Safety Compliance Architecture</h3>
+            <p className="hub-subline">
+              Comprehensive regulatory implementation conforming to CDISC standards, HL7 FHIR R4, ABDM (M1-M3), DPDP Act 2023, ALCOA+ cryptographic ledger, and 21 CFR Part 11 electronic records.
+            </p>
+          </div>
+          <div className="hub-cert-badges">
+            <span className="badge-tag">GAMP 5 CSV</span>
+            <span className="badge-tag">ISO 27001</span>
+            <span className="badge-tag">CERT-In AUDITED</span>
+          </div>
+        </div>
+
+        <div className="hub-pillars-grid">
+          {/* Pillar 1: Standards */}
+          <div className="hub-pillar-box">
+            <div className="pillar-header">
+              <span className="pillar-ico">🛡️</span>
+              <div>
+                <h5>1. Standards-First Architecture</h5>
+                <span className="pillar-tag font-mono">CDISC · FHIR · ABDM</span>
+              </div>
+            </div>
+            <ul className="pillar-specs">
+              <li>✓ <strong>CDISC CDASH v2.2</strong> eCRF domain models</li>
+              <li>✓ <strong>CDISC SDTM v3.4</strong> &amp; <strong>ADaM</strong> datasets</li>
+              <li>✓ <strong>Define-XML v2.1</strong> &amp; <strong>ODM 1.3.2</strong> export</li>
+              <li>✓ <strong>HL7 FHIR R4</strong> ResearchStudy &amp; AdverseEvent APIs</li>
+              <li>✓ <strong>ABDM Gateway</strong> (ABHA M1, HPR M2, HIU/HIP M3)</li>
+            </ul>
+            {onNavigateToPage && (
+              <button
+                type="button"
+                className="pillar-action-btn"
+                onClick={() => onNavigateToPage('standards')}
+              >
+                Inspect CDISC Datasets &amp; FHIR Console →
+              </button>
+            )}
+          </div>
+
+          {/* Pillar 2: Full Lifecycle */}
+          <div className="hub-pillar-box">
+            <div className="pillar-header">
+              <span className="pillar-ico">🔄</span>
+              <div>
+                <h5>2. Full Study Lifecycle</h5>
+                <span className="pillar-tag font-mono">10 Stages · Protocol to Close-out</span>
+              </div>
+            </div>
+            <ul className="pillar-specs">
+              <li>✓ <strong>Protocol Versioning</strong> (v1.0 to v2.1 approved)</li>
+              <li>✓ <strong>IEC Approval Workflow</strong> &amp; annual renewal</li>
+              <li>✓ <strong>CTRI Registration</strong> (CTRI/2024/03/064219)</li>
+              <li>✓ <strong>Site Activation Checklist</strong> (4 multicentric sites)</li>
+              <li>✓ <strong>Block Randomization</strong> (Stratified IWRS)</li>
+              <li>✓ <strong>Visit Schedule</strong> &amp; ±2d window compliance</li>
+            </ul>
+            {onNavigateToPage && (
+              <button
+                type="button"
+                className="pillar-action-btn"
+                onClick={() => onNavigateToPage('lifecycle')}
+              >
+                Open 10-Stage Lifecycle &amp; Gantt →
+              </button>
+            )}
+          </div>
+
+          {/* Pillar 3: Pharmacovigilance */}
+          <div className="hub-pillar-box">
+            <div className="pillar-header">
+              <span className="pillar-ico">💊</span>
+              <div>
+                <h5>3. Deep Pharmacovigilance</h5>
+                <span className="pillar-tag font-mono">NPvCC Safety Desk</span>
+              </div>
+            </div>
+            <ul className="pillar-specs">
+              <li>✓ <strong>MedDRA v27.0</strong> auto-coder (LLT → PT → SOC)</li>
+              <li>✓ <strong>WHODrug Dictionaries</strong> for concomitant meds</li>
+              <li>✓ <strong>7/15/90-Day Statutory Timers</strong> for CDSCO SUGAM</li>
+              <li>✓ <strong>Signal Detection</strong> (PRR &amp; ROR disproportionality)</li>
+              <li>✓ <strong>Naranjo Algorithm</strong> interactive causality</li>
+              <li>✓ <strong>21 CFR Part 11</strong> electronic signature dialog</li>
+            </ul>
+            {onNavigateToPage && (
+              <button
+                type="button"
+                className="pillar-action-btn highlight-btn"
+                onClick={() => onNavigateToPage('pv')}
+              >
+                Open PV Safety &amp; MedDRA Desk →
+              </button>
+            )}
+          </div>
+
+          {/* Pillar 4: Security & DPDP */}
+          <div className="hub-pillar-box">
+            <div className="pillar-header">
+              <span className="pillar-ico">📜</span>
+              <div>
+                <h5>4. DPDP Act 2023 &amp; Security</h5>
+                <span className="pillar-tag font-mono">MeitY Cloud · Section 6</span>
+              </div>
+            </div>
+            <ul className="pillar-specs">
+              <li>✓ <strong>DPDP Act 2023 &amp; 2025 Rules</strong> compliance</li>
+              <li>✓ <strong>Bilingual Consent</strong> (Hindi / English dual script)</li>
+              <li>✓ <strong>Section 12 Right to Erasure</strong> retention workflow</li>
+              <li>✓ <strong>MeitY-Empanelled Cloud</strong> (New Delhi/Mumbai)</li>
+              <li>✓ <strong>AES-256 Encryption</strong> at rest &amp; TLS 1.3 in transit</li>
+            </ul>
+            {onNavigateToPage && (
+              <button
+                type="button"
+                className="pillar-action-btn"
+                onClick={() => onNavigateToPage('consent')}
+              >
+                Open DPDP Consent Management →
+              </button>
+            )}
+          </div>
+
+          {/* Pillar 5: Multi-Persona Workspaces */}
+          <div className="hub-pillar-box">
+            <div className="pillar-header">
+              <span className="pillar-ico">👥</span>
+              <div>
+                <h5>5. Role-Tailored Workspaces</h5>
+                <span className="pillar-tag font-mono">7 Distinct Personas</span>
+              </div>
+            </div>
+            <ul className="pillar-specs">
+              <li>✓ <strong>Coordinator Desk</strong>: Visits, windows, pending eCRFs</li>
+              <li>✓ <strong>Monitor (CRA) Hub</strong>: SDV status, query lifecycle</li>
+              <li>✓ <strong>Ethics (IEC) Portal</strong>: Amendments, renewal dossiers</li>
+              <li>✓ <strong>PV Queue</strong>: MedDRA queue, expedited 7-day clocks</li>
+              <li>✓ <strong>Regulator View</strong>: Read-only audit &amp; risk heatmap</li>
+              <li>✓ <strong>Admin &amp; PI Centers</strong>: Governance &amp; trial oversight</li>
+            </ul>
+            {onNavigateToPage && (
+              <button
+                type="button"
+                className="pillar-action-btn"
+                onClick={() => onNavigateToPage('workspace')}
+              >
+                Switch to Role Workspace ({currentRole}) →
+              </button>
+            )}
+          </div>
+
+          {/* Pillar 6: ALCOA+ Audit & Validation */}
+          <div className="hub-pillar-box">
+            <div className="pillar-header">
+              <span className="pillar-ico">🔒</span>
+              <div>
+                <h5>6. ALCOA+ &amp; GCP CSV Validation</h5>
+                <span className="pillar-tag font-mono">GAMP 5 · SHA-256 Ledger</span>
+              </div>
+            </div>
+            <ul className="pillar-specs">
+              <li>✓ <strong>ALCOA+ Principle</strong>: Attributable, Legible, Contemporaneous</li>
+              <li>✓ <strong>SHA-256 Immutable Hash Chain</strong> (WORM ledger)</li>
+              <li>✓ <strong>GCP CSV (IQ/OQ/PQ)</strong> formal qualification matrix</li>
+              <li>✓ <strong>Validation Certificate</strong>: AIIA-CSV-2026-CERT-091</li>
+              <li>✓ <strong>Audit Completeness</strong>: Zero untracked changes</li>
+            </ul>
+            {onNavigateToPage && (
+              <button
+                type="button"
+                className="pillar-action-btn"
+                onClick={() => onNavigateToPage('audit')}
+              >
+                Verify ALCOA+ Immutable Chain →
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Top Real-Time KPI Metric Cards */}
       <div className="kpi-cards-grid">
         {/* KPI 1: Enrolment */}

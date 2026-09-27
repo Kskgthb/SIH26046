@@ -43,7 +43,7 @@ function App() {
         return hash as DashboardPage
       }
     }
-    return 'kpis'
+    return 'standards'
   })
 
   // Studies State
@@ -314,6 +314,7 @@ function App() {
           currentRole={currentRole}
           onSelectRole={(r) => {
             setCurrentRole(r)
+            setCurrentPage('workspace')
             const auditEntry: AuditLogEntry = {
               id: `aud-${Math.floor(Math.random() * 9000 + 1000)}`,
               timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' IST',
@@ -323,7 +324,7 @@ function App() {
               action: 'STATUS_CHANGE',
               entity: 'STUDY',
               entityId: selectedStudyId,
-              details: `Switched active dashboard security context to Role: ${r}. RBAC filters recalculated.`,
+              details: `Switched active dashboard security context to Role: ${r}. Launched dedicated ${r} workspace.`,
               ipAddress: '14.139.60.1',
               alcoaHash: Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
             }
@@ -337,20 +338,11 @@ function App() {
         <div className="page-tabs-bar">
           <button
             type="button"
-            className={`page-tab-btn ${currentPage === 'workspace' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('workspace')}
+            className={`page-tab-btn ${currentPage === 'standards' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('standards')}
           >
-            <span className="tab-icon">🩺</span>
-            <span className="tab-title">Persona Workspace ({currentRole})</span>
-          </button>
-
-          <button
-            type="button"
-            className={`page-tab-btn ${currentPage === 'kpis' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('kpis')}
-          >
-            <span className="tab-icon">📊</span>
-            <span className="tab-title">KPIs &amp; Alerts</span>
+            <span className="tab-icon">🛡️</span>
+            <span className="tab-title">1. Standards &amp; Interop</span>
           </button>
 
           <button
@@ -359,7 +351,7 @@ function App() {
             onClick={() => setCurrentPage('lifecycle')}
           >
             <span className="tab-icon">🔄</span>
-            <span className="tab-title">Lifecycle &amp; Gantt</span>
+            <span className="tab-title">2. Study Lifecycle</span>
           </button>
 
           <button
@@ -368,7 +360,7 @@ function App() {
             onClick={() => setCurrentPage('pv')}
           >
             <span className="tab-icon">💊</span>
-            <span className="tab-title">Pharmacovigilance</span>
+            <span className="tab-title">3. Pharmacovigilance</span>
           </button>
 
           <button
@@ -377,7 +369,7 @@ function App() {
             onClick={() => setCurrentPage('consent')}
           >
             <span className="tab-icon">📜</span>
-            <span className="tab-title">Consent (DPDP)</span>
+            <span className="tab-title">4. DPDP &amp; Consent</span>
           </button>
 
           <button
@@ -386,16 +378,25 @@ function App() {
             onClick={() => setCurrentPage('audit')}
           >
             <span className="tab-icon">🔒</span>
-            <span className="tab-title">ALCOA+ Audit Trail</span>
+            <span className="tab-title">5. ALCOA+ Audit</span>
           </button>
 
           <button
             type="button"
-            className={`page-tab-btn ${currentPage === 'standards' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('standards')}
+            className={`page-tab-btn ${currentPage === 'workspace' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('workspace')}
           >
-            <span className="tab-icon">🛡️</span>
-            <span className="tab-title">Standards &amp; Interop</span>
+            <span className="tab-icon">🩺</span>
+            <span className="tab-title">6. Role Workspaces ({currentRole})</span>
+          </button>
+
+          <button
+            type="button"
+            className={`page-tab-btn ${currentPage === 'kpis' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('kpis')}
+          >
+            <span className="tab-icon">📊</span>
+            <span className="tab-title">7. KPIs &amp; Alerts</span>
           </button>
         </div>
 
@@ -421,6 +422,7 @@ function App() {
               alerts={alerts}
               currentRole={currentRole}
               onOpenSAEForm={() => setCurrentPage('pv')}
+              onNavigateToPage={(p) => setCurrentPage(p as DashboardPage)}
             />
           </section>
         )}

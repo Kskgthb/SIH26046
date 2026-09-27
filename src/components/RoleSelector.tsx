@@ -90,6 +90,11 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
         )}
       </div>
 
+      <div className="role-selector-callout-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+        <span>👉 <strong>Click any role below to instantly open their live customized workspace:</strong></span>
+        <span className="font-mono text-muted" style={{ fontSize: '0.78rem' }}>Multi-Persona RBAC Engine</span>
+      </div>
+
       <div className="roles-scroll-container">
         {rolesList.map((item) => {
           const isActive = currentRole === item.role
@@ -99,11 +104,11 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
               type="button"
               className={`role-pill-btn ${isActive ? 'active' : ''}`}
               onClick={() => onSelectRole(item.role)}
-              title={`${item.label}: ${item.desc}`}
+              title={`${item.label} (${item.role}): ${item.desc}`}
             >
               <span className="role-btn-icon">{item.icon}</span>
-              <span className="role-btn-text">{item.role}</span>
-              {isActive && <span className="active-dot">✓</span>}
+              <span className="role-btn-text"><strong>{item.label}</strong> ({item.role})</span>
+              {isActive && <span className="active-dot">✓ Active</span>}
             </button>
           )
         })}

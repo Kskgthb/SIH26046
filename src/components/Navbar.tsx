@@ -10,13 +10,13 @@ interface NavbarProps {
 }
 
 const pagesList: { id: DashboardPage; label: string; icon: string; sub: string }[] = [
-  { id: 'workspace', label: 'Persona Workspace', icon: '🩺', sub: 'Role-tailored views' },
-  { id: 'kpis', label: 'KPIs & Alerts', icon: '📊', sub: 'Enrolment & deviations' },
-  { id: 'lifecycle', label: 'Lifecycle & Gantt', icon: '🔄', sub: '10-stage trial timeline' },
-  { id: 'pv', label: 'Pharmacovigilance', icon: '💊', sub: 'SAE & MedDRA coding' },
-  { id: 'consent', label: 'Consent (DPDP)', icon: '📜', sub: 'Bilingual e-Consent' },
-  { id: 'audit', label: 'Audit Trail', icon: '🔒', sub: 'ALCOA+ SHA-256 ledger' },
-  { id: 'standards', label: 'Standards & FHIR', icon: '🛡️', sub: 'CDISC, ABDM & Interop' },
+  { id: 'standards', label: '1. Standards & Interop', icon: '🛡️', sub: 'CDISC, FHIR R4, ABDM, Define-XML' },
+  { id: 'lifecycle', label: '2. Study Lifecycle', icon: '🔄', sub: '10 Stages: Protocol to Close-out' },
+  { id: 'pv', label: '3. Pharmacovigilance', icon: '💊', sub: 'MedDRA v27.0, WHODrug, 7/15/90d' },
+  { id: 'consent', label: '4. DPDP & Consent', icon: '📜', sub: 'Section 6, Bilingual, Erasure' },
+  { id: 'audit', label: '5. ALCOA+ Audit', icon: '🔒', sub: 'SHA-256 Cryptographic Ledger' },
+  { id: 'workspace', label: '6. Role Dashboards', icon: '🩺', sub: '7 Personas (PI, CRA, CRC, IEC, PV)' },
+  { id: 'kpis', label: '7. KPIs & Reconciled Data', icon: '📊', sub: '636/860 portfolio math' },
 ]
 
 export const Navbar: React.FC<NavbarProps> = ({
