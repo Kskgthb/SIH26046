@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import type { Study, Alert, Role } from '../types'
 
 interface KPIAlertCenterProps {
@@ -6,6 +6,7 @@ interface KPIAlertCenterProps {
   alerts: Alert[]
   currentRole: Role
   onOpenSAEForm: () => void
+  onSelectStudy?: (studyId: string) => void
 }
 
 export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
@@ -14,6 +15,8 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
   currentRole,
   onOpenSAEForm,
 }) => {
+  const [selectedStudyTab, setSelectedStudyTab] = useState<string>('study-1')
+
   const totalEnrolled = studies.reduce((acc, s) => acc + s.enrolmentCurrent, 0)
   const totalTarget = studies.reduce((acc, s) => acc + s.enrolmentTarget, 0)
   const totalSAEs = studies.reduce((acc, s) => acc + s.activeSAEsCount, 0)
@@ -27,6 +30,8 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
     (a) => a.roleAudience.includes(currentRole) || currentRole === 'Admin'
   )
 
+  const activeStudy = studies.find((s) => s.id === selectedStudyTab) || studies[0]
+
   return (
     <div className="kpi-alert-container">
       {/* Top Real-Time KPI Metric Cards */}
@@ -34,12 +39,12 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
         {/* KPI 1: Enrolment */}
         <div className="kpi-glass-card">
           <div className="kpi-card-header">
-            <span className="kpi-tag">ENROLMENT TRAJECTORY</span>
+            <span className="kpi-tag">PORTFOLIO ENROLMENT TRAJECTORY</span>
             <span className="kpi-icon">👥</span>
           </div>
           <div className="kpi-main-metric">
             <span className="kpi-number">{totalEnrolled}</span>
-            <span className="kpi-divider">/ {totalTarget}</span>
+            <span className="kpi-divider">/ {totalTarget} (74.0%)</span>
           </div>
           <div className="kpi-bar-wrapper">
             <div
@@ -49,9 +54,9 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
           </div>
           <div className="kpi-footer-note">
             <span className="kpi-status-badge lag">
-              ⚠️ 12.4% Enrolment Lag in Study 1
+              ⚠️ 12.4% Lag in Study 1 (382 vs 436 Benchmark)
             </span>
-            <span className="kpi-sub-text">Across {studies.length} active trials</span>
+            <span className="kpi-sub-text">Across 3 active multi-center trials</span>
           </div>
         </div>
 
@@ -66,7 +71,7 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
             <span className="kpi-badge-critical">Expedited Action</span>
           </div>
           <p className="kpi-pv-headline">
-            1 SAE subject under <strong>7-Day CDSCO Reporting Deadline</strong>
+            Subject <strong>AIIA-01-042</strong> under <strong>7-Day CDSCO Reporting Deadline</strong> (5 days left)
           </p>
           <div className="kpi-footer-action">
             <button
@@ -74,7 +79,7 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
               className="kpi-action-btn-critical"
               onClick={onOpenSAEForm}
             >
-              <span>Review Expedited SAE</span>
+              <span>Review Expedited SAE Desk</span>
               <span>→</span>
             </button>
           </div>
@@ -88,20 +93,20 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
           </div>
           <div className="kpi-main-metric">
             <span className="kpi-number text-warn">2</span>
-            <span className="kpi-divider">Action Items</span>
+            <span className="kpi-divider">Statutory Deadlines</span>
           </div>
           <ul className="kpi-compliance-list">
             <li>
               <span className="dot yellow"></span>
-              <span>CTRI Bi-Annual Progress Update Due (Study 2)</span>
+              <span>Study 2 (AIIA/CTU/2025/04): IEC Renewal Due in 6 Days</span>
             </li>
             <li>
               <span className="dot yellow"></span>
-              <span>IEC Annual Renewal Dossier Due Oct 2026</span>
+              <span>Study 2 (CTRI/2025/02/079812): Bi-Annual Milestone Overdue</span>
             </li>
           </ul>
           <div className="kpi-footer-note">
-            <span className="kpi-sub-text">100% GCP-ASU Guidelines Aligned</span>
+            <span className="kpi-sub-text">100% CDSCO NDCT Rules 2019 Aligned</span>
           </div>
         </div>
 
@@ -117,10 +122,79 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
           </div>
           <div className="kpi-queries-status">
             <span className="badge-pill-queries">{totalOpenQueries} Open Data Queries</span>
-            <span className="badge-pill-monitoring">1 Site Visit Overdue</span>
+            <span className="badge-pill-monitoring">1 Site Visit Overdue (NIA Jaipur)</span>
           </div>
           <div className="kpi-footer-note">
-            <span className="kpi-sub-text">ALCOA+ Audit Trail Active</span>
+            <span className="kpi-sub-text">ALCOA+ Cryptographic Ledger Active</span>
+          </div>
+        </div>
+      </div>
+
+      {/* RECONCILED ENROLMENT MATH & PORTFOLIO BREAKDOWN */}
+      <div className="enrolment-reconciliation-card">
+        <div className="reconcile-header">
+          <div className="rec-title-group">
+            <span className="badge-tag">RECONCILED CLINICAL DATA MODEL</span>
+            <h4>Total Enrolment Portfolio Reconciled: 636 / 860 Enrolled (74.0%)</h4>
+          </div>
+          <span className="rec-sub font-mono">
+            382 (Study 1) + 240 (Study 2) + 14 (Study 3) = 636 Subjects Total
+          </span>
+        </div>
+
+        <div className="study-reconciliation-grid">
+          {studies.map((s) => (
+            <div
+              key={s.id}
+              className={`study-rec-box ${selectedStudyTab === s.id ? 'active' : ''}`}
+              onClick={() => setSelectedStudyTab(s.id)}
+            >
+              <div className="rec-box-top">
+                <span className="font-mono text-muted">{s.protocolNumber}</span>
+                <span className={`status-pill ${s.overallStatus === 'Recruiting' ? 'active' : 'info'}`}>
+                  {s.overallStatus}
+                </span>
+              </div>
+              <h5>{s.shortTitle}</h5>
+              <div className="rec-progress-row">
+                <span>Enrolment: <strong>{s.enrolmentCurrent}</strong> / {s.enrolmentTarget}</span>
+                <span className="font-mono">{Math.round((s.enrolmentCurrent / s.enrolmentTarget) * 100)}%</span>
+              </div>
+              <div className="mini-bar">
+                <div
+                  className="mini-bar-fill"
+                  style={{
+                    width: `${Math.round((s.enrolmentCurrent / s.enrolmentTarget) * 100)}%`,
+                    backgroundColor: s.enrolmentLagPercent > 0 ? 'var(--critical)' : 'var(--accent)',
+                  }}
+                ></div>
+              </div>
+              <div className="rec-note-sub">
+                {s.id === 'study-1' && (
+                  <span className="text-danger">⚠️ Benchmark to date: 436 (-12.4% recruitment lag)</span>
+                )}
+                {s.id === 'study-2' && (
+                  <span className="text-accent">✓ 100% Target Met (240/240). Active visits ongoing.</span>
+                )}
+                {s.id === 'study-3' && (
+                  <span className="text-muted">Initiation &amp; Site activation phase</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Selected Study Deep Info Banner */}
+        <div className="selected-study-details-strip">
+          <div className="details-col">
+            <label>Selected Study:</label>
+            <strong>{activeStudy.title}</strong>
+          </div>
+          <div className="details-meta-grid font-mono">
+            <div><span>CTRI ID:</span> <strong>{activeStudy.ctriNumber}</strong></div>
+            <div><span>IEC Ref:</span> <strong>{activeStudy.iecApprovalNumber}</strong></div>
+            <div><span>Active Sites:</span> <strong>{activeStudy.sites.length} Centers</strong></div>
+            <div><span>Screening Yield:</span> <strong>{activeStudy.screeningCurrent} / {activeStudy.screeningTarget}</strong></div>
           </div>
         </div>
       </div>
@@ -150,34 +224,34 @@ export const KPIAlertCenter: React.FC<KPIAlertCenterProps> = ({
                 <span className={`alert-severity-badge ${alertItem.severity.toLowerCase()}`}>
                   {alertItem.severity}
                 </span>
-                <span className="alert-category-tag">{alertItem.category}</span>
+                <span className="alert-cat-pill">{alertItem.category}</span>
               </div>
 
-              <div className="alert-content-col">
-                <div className="alert-top-row">
-                  <span className="alert-study-tag">[{alertItem.studyCode}]</span>
-                  <h4 className="alert-title">{alertItem.title}</h4>
-                  {alertItem.dueDate && (
-                    <span className="alert-due-time">
-                      ⏱️ Deadline: <strong>{alertItem.dueDate}</strong>
-                    </span>
-                  )}
+              <div className="alert-details-col">
+                <div className="alert-headline-row">
+                  <h4 className="alert-item-title">{alertItem.title}</h4>
+                  <span className="alert-study-tag font-mono">{alertItem.studyCode}</span>
                 </div>
-                <p className="alert-desc">{alertItem.description}</p>
-                <div className="alert-action-row">
-                  <span className="alert-action-label">Action Required:</span>
-                  <span className="alert-action-text">{alertItem.actionRequired}</span>
+                <p className="alert-item-desc">{alertItem.description}</p>
+                <div className="alert-action-strip">
+                  <span className="action-label">Action Required:</span>
+                  <span className="action-text">{alertItem.actionRequired}</span>
                 </div>
               </div>
 
-              <div className="alert-btn-col">
-                <button
-                  type="button"
-                  className="alert-resolve-btn"
-                  onClick={() => window.alert(`Executed workflow trigger for: ${alertItem.title}`)}
-                >
-                  Resolve Alert
-                </button>
+              <div className="alert-actions-col">
+                {alertItem.dueDate && (
+                  <span className="alert-due-date font-mono">Due: {alertItem.dueDate}</span>
+                )}
+                {alertItem.category === 'PV / SAE Reporting' && (
+                  <button
+                    type="button"
+                    className="btn-alert-action-primary"
+                    onClick={onOpenSAEForm}
+                  >
+                    Take Action →
+                  </button>
+                )}
               </div>
             </div>
           ))}

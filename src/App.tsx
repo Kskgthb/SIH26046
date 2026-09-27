@@ -9,6 +9,7 @@ import { PharmacovigilanceModule } from './components/PharmacovigilanceModule'
 import { ConsentManagementView } from './components/ConsentManagementView'
 import { AuditTrailView } from './components/AuditTrailView'
 import { StandardsComplianceView } from './components/StandardsComplianceView'
+import { RoleSpecificWorkspace } from './components/RoleSpecificWorkspace'
 import './App.css'
 
 function App() {
@@ -26,11 +27,12 @@ function App() {
   // Role Based Persona
   const [currentRole, setCurrentRole] = useState<Role>('PI')
 
-  // Multi-Page Navigation State (6 distinct pages)
+  // Multi-Page Navigation State (7 distinct pages)
   const [currentPage, setCurrentPage] = useState<DashboardPage>(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '')
       if (
+        hash === 'workspace' ||
         hash === 'lifecycle' ||
         hash === 'kpis' ||
         hash === 'pv' ||
@@ -78,6 +80,7 @@ function App() {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '')
       if (
+        hash === 'workspace' ||
         hash === 'lifecycle' ||
         hash === 'kpis' ||
         hash === 'pv' ||
@@ -327,10 +330,20 @@ function App() {
             setAuditLogs((prev) => [auditEntry, ...prev])
           }}
           onTriggerDemoAlert={handleTriggerDemoAlert}
+          onOpenWorkspace={() => setCurrentPage('workspace')}
         />
 
         {/* Quick Page Navigation Tab Bar */}
         <div className="page-tabs-bar">
+          <button
+            type="button"
+            className={`page-tab-btn ${currentPage === 'workspace' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('workspace')}
+          >
+            <span className="tab-icon">🩺</span>
+            <span className="tab-title">Persona Workspace ({currentRole})</span>
+          </button>
+
           <button
             type="button"
             className={`page-tab-btn ${currentPage === 'kpis' ? 'active' : ''}`}
@@ -385,6 +398,20 @@ function App() {
             <span className="tab-title">Standards &amp; Interop</span>
           </button>
         </div>
+
+        {/* PAGE 0: Role-Specific Dedicated Workspace */}
+        {currentPage === 'workspace' && (
+          <section id="workspace-section" className="page-view-container">
+            <RoleSpecificWorkspace
+              currentRole={currentRole}
+              studies={studies}
+              adverseEvents={adverseEvents}
+              onSwitchRole={setCurrentRole}
+              onNavigateToPage={(p) => setCurrentPage(p as DashboardPage)}
+              onApproveESign={() => setCurrentPage('pv')}
+            />
+          </section>
+        )}
 
         {/* PAGE 1: KPIs & Alerts */}
         {currentPage === 'kpis' && (

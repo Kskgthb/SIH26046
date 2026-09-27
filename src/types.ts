@@ -7,7 +7,7 @@ export type Role =
   | 'Admin'
   | 'Regulator';
 
-export type DashboardPage = 'kpis' | 'lifecycle' | 'pv' | 'consent' | 'audit' | 'standards';
+export type DashboardPage = 'workspace' | 'kpis' | 'lifecycle' | 'pv' | 'consent' | 'audit' | 'standards';
 
 export type LifecycleStage =
   | 'Protocol'

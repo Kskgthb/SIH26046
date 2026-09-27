@@ -5,6 +5,7 @@ interface RoleSelectorProps {
   currentRole: Role
   onSelectRole: (role: Role) => void
   onTriggerDemoAlert?: (type: 'sae' | 'lag' | 'ethics') => void
+  onOpenWorkspace?: () => void
 }
 
 const rolesList: { role: Role; label: string; icon: string; desc: string; scope: string }[] = [
@@ -63,6 +64,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
   currentRole,
   onSelectRole,
   onTriggerDemoAlert,
+  onOpenWorkspace,
 }) => {
   const activeRoleData = rolesList.find((r) => r.role === currentRole) || rolesList[0]
 
@@ -76,6 +78,16 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
         <span className="role-hint">
           Active Security Context: <strong>{activeRoleData.label}</strong> ({activeRoleData.scope})
         </span>
+        {onOpenWorkspace && (
+          <button
+            type="button"
+            className="btn-open-persona-desk"
+            onClick={onOpenWorkspace}
+            title="Open tailored dashboard for active role"
+          >
+            🖥️ Launch {activeRoleData.role} Workspace →
+          </button>
+        )}
       </div>
 
       <div className="roles-scroll-container">

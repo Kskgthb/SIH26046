@@ -10,6 +10,7 @@ interface NavbarProps {
 }
 
 const pagesList: { id: DashboardPage; label: string; icon: string; sub: string }[] = [
+  { id: 'workspace', label: 'Persona Workspace', icon: '🩺', sub: 'Role-tailored views' },
   { id: 'kpis', label: 'KPIs & Alerts', icon: '📊', sub: 'Enrolment & deviations' },
   { id: 'lifecycle', label: 'Lifecycle & Gantt', icon: '🔄', sub: '10-stage trial timeline' },
   { id: 'pv', label: 'Pharmacovigilance', icon: '💊', sub: 'SAE & MedDRA coding' },

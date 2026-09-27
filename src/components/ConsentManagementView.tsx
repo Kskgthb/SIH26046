@@ -97,10 +97,17 @@ export const ConsentManagementView: React.FC<ConsentManagementViewProps> = ({
           </div>
         </div>
         <div className="banner-item">
+          <span className="banner-ico">🗑️</span>
+          <div>
+            <strong>Right to Erasure (Sec 12)</strong>
+            <p>Subject data erasure request portal subject to statutory GCP retention rules</p>
+          </div>
+        </div>
+        <div className="banner-item">
           <span className="banner-ico">🇮🇳</span>
           <div>
-            <strong>Data Sovereignty</strong>
-            <p>100% data resident within MeitY empanelled Indian Cloud (Delhi Region)</p>
+            <strong>Data Sovereignty &amp; CERT-In</strong>
+            <p>100% data resident within MeitY empanelled Indian Cloud (Delhi); ISO 27001 &amp; CERT-In compliant</p>
           </div>
         </div>
       </div>
